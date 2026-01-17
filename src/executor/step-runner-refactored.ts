@@ -16,7 +16,7 @@ import { WaitActionHandler } from './actions/wait-action-handler';
 import { ScreenshotActionHandler } from './actions/screenshot-action-handler';
 import { ScrollActionHandler } from './actions/scroll-action-handler';
 import { UploadActionHandler } from './actions/upload-action-handler';
-import { ClickActionHandler } from './actions/click/click-action-handler';
+import { ClickActionHandler } from './actions/click-action-handler';
 import type { IActionHandler } from './actions/action-handler';
 
 // 创建空的 allure 对象，避免修改所有调用处
@@ -106,15 +106,10 @@ export class StepRunner {
       this.currentStepDescription = description;
     }
     
-    // 更新 hover 和 click 处理器的步骤索引
+    // 更新 hover 处理器的步骤索引
     const hoverHandler = this.actionHandlers.get('hover') as HoverActionHandler;
     if (hoverHandler && typeof hoverHandler.setStepIndex === 'function') {
       hoverHandler.setStepIndex(this.currentStepIndex);
-    }
-    
-    const clickHandler = this.actionHandlers.get('click') as ClickActionHandler;
-    if (clickHandler && typeof clickHandler.setStepIndex === 'function') {
-      clickHandler.setStepIndex(this.currentStepIndex);
     }
     
     const stepName = step.description || step.action;

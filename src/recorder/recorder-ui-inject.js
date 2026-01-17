@@ -224,6 +224,7 @@
     '<div class="recorder-controls">' +
     '<button class="recorder-btn primary" id="btn-pause">暂停</button>' +
     '<button class="recorder-btn" id="btn-hover">添加悬停</button>' +
+    '<button class="recorder-btn" id="btn-click">鼠标点击</button>' +
     '<button class="recorder-btn" id="btn-clear">清空</button>' +
     '<button class="recorder-btn" id="btn-save">保存</button>' +
     '</div>' +

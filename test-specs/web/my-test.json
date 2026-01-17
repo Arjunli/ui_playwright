@@ -100,8 +100,12 @@
         ],
         "description": "定位 input 元素 (placeholder: \"请输入密码\")"
       },
-      "description": "按下 Enter 键",
-      "targetUrl": "http://192.168.9.202:81/index"
+      "description": "按下 Enter 键"
+    },
+    {
+      "action": "navigate",
+      "value": "http://192.168.9.202:81/index",
+      "description": "导航到页面"
     },
     {
       "action": "click",
@@ -129,6 +133,20 @@
           }
         ],
         "description": "定位 button 元素"
+      },
+      "description": "点击元素"
+    },
+    {
+      "action": "click",
+      "locator": {
+        "strategies": [
+          {
+            "type": "css",
+            "value": "div.version-update-content",
+            "priority": 7
+          }
+        ],
+        "description": "定位 div 元素"
       },
       "description": "点击元素",
       "expectedDialog": "消息中心"
@@ -165,6 +183,21 @@
         "description": "定位 div 元素"
       },
       "description": "悬停在元素上"
+    },
+    {
+      "action": "click",
+      "locator": {
+        "strategies": [
+          {
+            "type": "css",
+            "value": "path.SVGAnimatedString\\]",
+            "priority": 7
+          }
+        ],
+        "description": "定位 path 元素"
+      },
+      "description": "点击元素",
+      "expectedDialog": "消息中心"
     },
     {
       "action": "click",
@@ -228,204 +261,6 @@
           }
         ],
         "description": "定位 div 元素"
-      },
-      "description": "点击元素",
-      "expectedDialog": "消息中心"
-    },
-    {
-      "action": "click",
-      "locator": {
-        "strategies": [
-          {
-            "type": "placeholder",
-            "value": "请输入手机号码",
-            "priority": 2
-          },
-          {
-            "type": "css",
-            "value": "input.el-input__inner",
-            "priority": 7
-          }
-        ],
-        "description": "定位 input 元素 (placeholder: \"请输入手机号码\")"
-      },
-      "description": "点击元素",
-      "expectedDialog": "消息中心"
-    },
-    {
-      "action": "click",
-      "locator": {
-        "strategies": [
-          {
-            "type": "placeholder",
-            "value": "请输入手机号码",
-            "priority": 2
-          },
-          {
-            "type": "css",
-            "value": "input.el-input__inner",
-            "priority": 7
-          }
-        ],
-        "description": "定位 input 元素 (placeholder: \"请输入手机号码\")"
-      },
-      "description": "点击元素",
-      "expectedDialog": "消息中心"
-    },
-    {
-      "action": "click",
-      "locator": {
-        "strategies": [
-          {
-            "type": "placeholder",
-            "value": "请输入手机号码",
-            "priority": 2
-          },
-          {
-            "type": "css",
-            "value": "input.el-input__inner",
-            "priority": 7
-          }
-        ],
-        "description": "定位 input 元素 (placeholder: \"请输入手机号码\")"
-      },
-      "description": "点击元素",
-      "expectedDialog": "消息中心"
-    },
-    {
-      "action": "click",
-      "locator": {
-        "strategies": [
-          {
-            "type": "placeholder",
-            "value": "请输入飞书链接地址",
-            "priority": 2
-          },
-          {
-            "type": "css",
-            "value": "input.el-input__inner",
-            "priority": 7
-          }
-        ],
-        "description": "定位 input 元素 (placeholder: \"请输入飞书链接地址\")"
-      },
-      "description": "点击元素"
-    },
-    {
-      "action": "fill",
-      "locator": {
-        "strategies": [
-          {
-            "type": "placeholder",
-            "value": "请输入飞书链接地址",
-            "priority": 2
-          },
-          {
-            "type": "css",
-            "value": "input.el-input__inner",
-            "priority": 7
-          }
-        ],
-        "description": "定位 input 元素 (placeholder: \"请输入飞书链接地址\")"
-      },
-      "value": "3331",
-      "description": "填充输入"
-    },
-    {
-      "action": "click",
-      "locator": {
-        "strategies": [
-          {
-            "type": "placeholder",
-            "value": "请输入内容",
-            "priority": 2
-          },
-          {
-            "type": "css",
-            "value": "textarea.el-textarea__inner",
-            "priority": 7
-          }
-        ],
-        "description": "定位 textarea 元素 (placeholder: \"请输入内容\")"
-      },
-      "description": "点击元素"
-    },
-    {
-      "action": "fill",
-      "locator": {
-        "strategies": [
-          {
-            "type": "placeholder",
-            "value": "请输入内容",
-            "priority": 2
-          },
-          {
-            "type": "css",
-            "value": "textarea.el-textarea__inner",
-            "priority": 7
-          }
-        ],
-        "description": "定位 textarea 元素 (placeholder: \"请输入内容\")"
-      },
-      "value": "33331",
-      "description": "填充输入"
-    },
-    {
-      "action": "click",
-      "locator": {
-        "strategies": [
-          {
-            "type": "text",
-            "value": "确 定",
-            "priority": 6
-          },
-          {
-            "type": "css",
-            "value": "button.el-button:has-text(\"确 定\")",
-            "priority": 6.5
-          },
-          {
-            "type": "xpath",
-            "value": "//button[text()=\"确 定\"]",
-            "priority": 6.8
-          },
-          {
-            "type": "css",
-            "value": "button.el-button",
-            "priority": 7
-          }
-        ],
-        "description": "定位 button 元素"
-      },
-      "description": "点击元素",
-      "expectedDialog": "消息中心"
-    },
-    {
-      "action": "click",
-      "locator": {
-        "strategies": [
-          {
-            "type": "text",
-            "value": "重置",
-            "priority": 6
-          },
-          {
-            "type": "css",
-            "value": "button.el-button:has-text(\"重置\")",
-            "priority": 6.5
-          },
-          {
-            "type": "xpath",
-            "value": "//button[text()=\"重置\"]",
-            "priority": 6.8
-          },
-          {
-            "type": "css",
-            "value": "button.el-button",
-            "priority": 7
-          }
-        ],
-        "description": "定位 button 元素"
       },
       "description": "点击元素",
       "expectedDialog": "消息中心"

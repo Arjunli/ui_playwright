@@ -342,6 +342,17 @@ export class ActionCapture {
           timestamp: Date.now(),
         });
       });
+
+      // 监听手动鼠标点击事件（坐标点击）
+      window.addEventListener('__playwright_click_manual', async (e: any) => {
+        const detail = e.detail;
+        (window as any).__playwrightRecorderEvents = (window as any).__playwrightRecorderEvents || [];
+        (window as any).__playwrightRecorderEvents.push({
+          type: 'click_manual',
+          data: detail,
+          timestamp: Date.now(),
+        });
+      });
     });
 
     // 定期检查事件
@@ -386,6 +397,10 @@ export class ActionCapture {
       case 'click':
         await this.captureClick(event.data.x, event.data.y, event.data);
         break;
+      case 'click_manual':
+        // 手动鼠标点击（坐标点击）
+        await this.captureManualClick(event.data.x, event.data.y);
+        break;
       case 'input':
         await this.captureInput(event.data.x, event.data.y, event.data);
         break;
@@ -395,6 +410,105 @@ export class ActionCapture {
             case 'hover':
               await this.captureHover(event.data.x, event.data.y);
               break;
+    }
+  }
+
+  /**
+   * 捕获手动鼠标点击（坐标点击，作为兜底方案）
+   */
+  private async captureManualClick(x: number, y: number): Promise<void> {
+    // 检查页面是否已关闭
+    if (this.page.isClosed()) {
+      return;
+    }
+    
+    // 检查是否暂停
+    if (this.recorderUI) {
+      try {
+        const paused = await this.recorderUI.isPaused();
+        if (paused) {
+          return;
+        }
+      } catch (error: any) {
+        if (error.message && error.message.includes('closed')) {
+          return;
+        }
+        throw error;
+      }
+    }
+
+    const clickTime = Date.now();
+
+    // 尝试获取元素数据（如果可能）
+    let elementData = null;
+    try {
+      elementData = await this.page.evaluate((args: { x: number; y: number }) => {
+        // @ts-ignore
+        const getElementData = (window as any).__playwrightGetElementData;
+        if (typeof getElementData === 'function') {
+          return getElementData(args.x, args.y);
+        }
+        return null;
+      }, { x, y });
+    } catch (e) {
+      // 如果获取失败，继续使用坐标
+    }
+
+    // 生成定位策略（优先使用元素数据，如果失败则使用坐标）
+    let locatorConfig;
+    if (elementData) {
+      // 尝试生成正常的定位策略
+      locatorConfig = await this.locatorGenerator.generateFromClick(x, y);
+    }
+
+    // 如果无法生成定位策略，创建一个基于坐标的兜底策略
+    if (!locatorConfig || !locatorConfig.strategies || locatorConfig.strategies.length === 0) {
+      locatorConfig = {
+        strategies: [
+          {
+            type: 'coordinate',
+            value: `${x},${y}`,
+            priority: 10, // 最低优先级，作为最后兜底
+          },
+        ],
+        description: `坐标点击 (${x}, ${y})`,
+      };
+    } else {
+      // 在现有策略列表末尾添加坐标策略作为兜底
+      locatorConfig.strategies.push({
+        type: 'coordinate',
+        value: `${x},${y}`,
+        priority: 10,
+      });
+    }
+
+    // 获取元素描述（用于日志）
+    const elementDescription = locatorConfig.description || `坐标点击 (${x}, ${y})`;
+
+    // 输出步骤日志
+    this.stepIndex++;
+    console.log(`[录制步骤 ${this.stepIndex}] 🖱️  鼠标点击: ${elementDescription}`);
+
+    const action: CapturedAction = {
+      type: 'click',
+      timestamp: clickTime,
+      data: {
+        locator: locatorConfig,
+        x,
+        y,
+        isManualClick: true, // 标记为手动点击
+      },
+    };
+
+    this.capturedActions.push(action);
+
+    // 更新 UI
+    if (this.recorderUI) {
+      await this.recorderUI.addAction({
+        type: '点击',
+        details: `鼠标点击: ${elementDescription}`,
+        timestamp: clickTime,
+      });
     }
   }
 

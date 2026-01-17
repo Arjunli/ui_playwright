@@ -1,4 +1,4 @@
-import { test, expect } from '../src/fixtures/custom-fixtures';
+import { test, expect } from '../../src/fixtures/custom-fixtures';
 
 test.describe('Web 测试示例', () => {
   test('登录测试示例', async ({ webPage, environment }) => {

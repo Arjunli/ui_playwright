@@ -469,8 +469,21 @@ export class LocatorGenerator {
         attributes: elementData.attributes,
       };
 
+      // 生成完整 XPath 路径（类似爬虫的完整路径，优先级最高）
+      const fullXPath = await this.generateFullXPath(x, y);
+      
       // 如果当前元素没有可用的定位策略，尝试使用父元素
       let locatorConfig = this.generateLocatorConfigFromInfo(elementInfo, elementData.parent);
+      
+      // 如果有完整 XPath，将其添加到策略列表的最前面（最高优先级，类似爬虫）
+      if (fullXPath) {
+        locatorConfig.strategies.unshift({
+          type: 'xpath',
+          value: fullXPath,
+          priority: 3.5, // 优先级高于普通 XPath (5.8)，但低于 testid (1)、id (2)、role (3)
+        });
+        console.log(`✅ 生成完整 XPath 路径: ${fullXPath}`);
+      }
       
       // 如果有父菜单信息，生成更精确的定位策略（结合父菜单路径）
       if (elementData.parentMenuInfo && elementData.parentMenuInfo.length > 0) {
@@ -816,6 +829,132 @@ export class LocatorGenerator {
     }
 
     return `${elementInfo.tagName}`;
+  }
+
+  /**
+   * 生成完整的 XPath 路径（从根节点到目标元素的完整路径，类似爬虫）
+   * 这个方法在浏览器端执行，可以获取完整的 DOM 路径
+   */
+  async generateFullXPath(x: number, y: number): Promise<string | null> {
+    try {
+      // 使用字符串形式的函数，避免编译问题
+      const fullXPath = await this.page.evaluate(`
+        (function() {
+          const x = arguments[0].x;
+          const y = arguments[0].y;
+          
+          // 获取点击位置的元素
+          let element = document.elementFromPoint(x, y);
+          if (!element) return null;
+          
+          // 优先查找可交互的元素（button、a、input 等）
+          let current = element;
+          const interactiveTags = ['button', 'a', 'input', 'select', 'textarea'];
+          const maxDepth = 5;
+          let depth = 0;
+          
+          while (current && depth < maxDepth) {
+            const tagName = current.tagName.toLowerCase();
+            if (interactiveTags.indexOf(tagName) >= 0 || 
+                current.getAttribute('role') === 'button' ||
+                current.getAttribute('role') === 'link' ||
+                current.getAttribute('onclick') ||
+                (current.style && current.style.cursor === 'pointer')) {
+              element = current;
+              break;
+            }
+            current = current.parentElement;
+            depth++;
+          }
+          
+          // 生成完整 XPath 路径的函数
+          function getXPath(el) {
+            if (!el || el.nodeType !== 1) return null;
+            
+            const path = [];
+            let current = el;
+            
+            while (current && current.nodeType === 1) {
+              let index = 1;
+              let sibling = current.previousElementSibling;
+              
+              // 计算当前元素在同级元素中的位置
+              while (sibling) {
+                if (sibling.nodeName === current.nodeName) {
+                  index++;
+                }
+                sibling = sibling.previousElementSibling;
+              }
+              
+              const tagName = current.nodeName.toLowerCase();
+              let xpathPart = tagName;
+              
+              // 如果有 ID，使用 ID（最稳定）
+              if (current.id) {
+                const id = String(current.id).replace(/"/g, '\\\\"');
+                xpathPart = tagName + '[@id="' + id + '"]';
+              }
+              // 如果有稳定的 class，使用 class
+              else if (current.className) {
+                const classNameStr = String(current.className);
+                // 使用空格分割 class（避免正则表达式转义问题）
+                const classes = classNameStr.split(' ').filter(function(c) { 
+                  return c && c.indexOf('el-id-') < 0 && c.length > 0; 
+                });
+                if (classes.length > 0) {
+                  const stableClass = classes[0].replace(/"/g, '\\\\"');
+                  xpathPart = tagName + '[@class="' + stableClass + '"]';
+                } else {
+                  xpathPart = tagName + '[' + index + ']';
+                }
+              }
+              // 如果有 name 属性，使用 name
+              else if (current.getAttribute('name')) {
+                const name = String(current.getAttribute('name')).replace(/"/g, '\\\\"');
+                xpathPart = tagName + '[@name="' + name + '"]';
+              }
+              // 如果有 data-testid，使用 data-testid
+              else if (current.getAttribute('data-testid')) {
+                const testId = String(current.getAttribute('data-testid')).replace(/"/g, '\\\\"');
+                xpathPart = tagName + '[@data-testid="' + testId + '"]';
+              }
+              // 如果有文本内容且文本较短，使用文本（仅用于叶子节点）
+              else if (current.textContent && current.textContent.trim().length > 0 && current.textContent.trim().length < 50) {
+                const text = current.textContent.trim().replace(/"/g, '\\\\"').replace(/'/g, "\\\\'");
+                xpathPart = tagName + '[text()="' + text + '"]';
+              }
+              // 否则使用索引
+              else {
+                xpathPart = tagName + '[' + index + ']';
+              }
+              
+              path.unshift(xpathPart);
+              
+              // 如果到达 html 根节点，停止
+              if (current.tagName.toLowerCase() === 'html') {
+                break;
+              }
+              
+              current = current.parentElement;
+            }
+            
+            // 返回完整的 XPath 路径（从 /html 开始）
+            return '/' + path.join('/');
+          }
+          
+          return getXPath(element);
+        })
+      `, { x, y });
+      
+      if (fullXPath) {
+        console.log(`✅ 生成完整 XPath 路径: ${fullXPath}`);
+      }
+      
+      return fullXPath;
+    } catch (error: any) {
+      console.warn(`生成完整 XPath 失败: ${error.message}`);
+      return null;
+    }
   }
 
   /**

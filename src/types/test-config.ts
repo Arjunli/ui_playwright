@@ -9,7 +9,8 @@ export type LocatorStrategyType =
   | 'placeholder' // placeholder 属性
   | 'text'        // 文本内容
   | 'css'         // CSS 选择器
-  | 'xpath';      // XPath
+  | 'xpath'       // XPath
+  | 'coordinate'; // 坐标点击 (x,y) - 作为兜底方案
 
 /**
  * 定位策略

@@ -11,14 +11,15 @@ import { spawn } from 'child_process';
 const configPath = process.argv[2];
 const headless = process.argv.includes('--headed') ? false : true; // 默认无头模式，使用 --headed 显示浏览器
 const projectIndex = process.argv.indexOf('--project');
-const project = projectIndex > -1 ? process.argv[projectIndex + 1] : undefined; // 指定项目
+// 如果没有指定项目，默认使用 chromium-web（谷歌浏览器）
+const project = projectIndex > -1 ? process.argv[projectIndex + 1] : 'chromium-web';
 
 if (!configPath) {
   console.error('错误: 需要指定配置文件路径');
   console.error('用法: npm run test:config -- <配置文件路径> [选项]');
   console.error('  选项:');
   console.error('    --headed: 显示浏览器界面（默认无头模式）');
-  console.error('    --project <项目名>: 只运行指定项目（如: chromium-web, firefox-web）');
+  console.error('    --project <项目名>: 指定项目（默认: chromium-web，可选: firefox-web, webkit-web 等）');
   process.exit(1);
 }
 
@@ -118,10 +119,9 @@ test('${config.name.replace(/'/g, "\\'")}', { timeout: 600000 }, async ({ page }
   if (!headless) {
     args.push('--headed'); // 显示浏览器界面
   }
-  if (project) {
-    args.push('--project', project); // 只运行指定项目
-    console.log(`🎯 运行项目: ${project}`);
-  }
+  // 总是添加项目参数（默认使用 chromium-web）
+  args.push('--project', project);
+  console.log(`🎯 运行项目: ${project}`);
   
   // Windows 上需要使用 shell: true 来执行 npx
   const isWindows = process.platform === 'win32';
