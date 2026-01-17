@@ -1,0 +1,103 @@
+{
+  "name": "登录示例测试",
+  "description": "这是一个登录功能的示例测试配置",
+  "platform": "web",
+  "environment": "dev",
+  "tags": ["login", "auth", "smoke"],
+  "steps": [
+    {
+      "id": "step1",
+      "action": "navigate",
+      "value": "https://example.com/login",
+      "description": "导航到登录页面"
+    },
+    {
+      "id": "step2",
+      "action": "fill",
+      "locator": {
+        "strategies": [
+          {
+            "type": "id",
+            "value": "username",
+            "priority": 1
+          },
+          {
+            "type": "name",
+            "value": "username",
+            "priority": 2
+          },
+          {
+            "type": "placeholder",
+            "value": "用户名",
+            "priority": 3
+          }
+        ],
+        "description": "用户名输入框"
+      },
+      "value": "test@example.com",
+      "description": "输入用户名"
+    },
+    {
+      "id": "step3",
+      "action": "fill",
+      "locator": {
+        "strategies": [
+          {
+            "type": "id",
+            "value": "password",
+            "priority": 1
+          },
+          {
+            "type": "name",
+            "value": "password",
+            "priority": 2
+          }
+        ],
+        "description": "密码输入框"
+      },
+      "value": "password123",
+      "description": "输入密码"
+    },
+    {
+      "id": "step4",
+      "action": "click",
+      "locator": {
+        "strategies": [
+          {
+            "type": "testid",
+            "value": "login-button",
+            "priority": 1
+          },
+          {
+            "type": "role",
+            "value": "button",
+            "name": "登录",
+            "priority": 2
+          },
+          {
+            "type": "text",
+            "value": "登录",
+            "priority": 3
+          }
+        ],
+        "description": "登录按钮"
+      },
+      "description": "点击登录按钮"
+    },
+    {
+      "id": "step5",
+      "action": "wait",
+      "value": 2000,
+      "description": "等待页面加载"
+    },
+    {
+      "id": "step6",
+      "action": "assert",
+      "assertionType": "url",
+      "expectedValue": "https://example.com/dashboard",
+      "description": "断言跳转到仪表盘"
+    }
+  ],
+  "retries": 1,
+  "timeout": 30000
+}

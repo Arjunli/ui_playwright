@@ -1,0 +1,39 @@
+{
+  "name": "ui-playwright-framework",
+  "version": "1.0.0",
+  "description": "通用 Playwright UI 自动化测试框架，支持录制、多环境、多平台",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:config": "tsx scripts/run-config.ts",
+    "test:web": "playwright test tests/web",
+    "test:mobile": "playwright test tests/mobile",
+    "test:desktop": "playwright test tests/desktop",
+    "record": "tsx scripts/record.ts",
+    "convert": "tsx scripts/convert.ts",
+    "convert:codegen": "tsx scripts/convert-codegen.ts",
+    "report": "allure generate reports/allure-results --clean -o reports/allure-report && allure open reports/allure-report",
+    "report:generate": "allure generate reports/allure-results --clean -o reports/allure-report"
+  },
+  "keywords": [
+    "playwright",
+    "automation",
+    "testing",
+    "e2e",
+    "recorder"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "allure-playwright": "^2.13.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "js-yaml": "^4.1.0",
+    "commander": "^11.1.0"
+  }
+}
