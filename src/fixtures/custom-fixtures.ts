@@ -1,49 +1,28 @@
-import { test as base, Page, BrowserContext } from '@playwright/test';
-import { BasePage } from '../pages/base/BasePage';
-import { getEnvironment } from '../config/environments';
-import type { Platform } from '../types';
+import { test as base } from '@playwright/test';
+import type { PlayWrightAiFixtureType } from '@midscene/web/playwright';
+import { PlaywrightAiFixture } from '@midscene/web/playwright';
+import { getEnvironment, type EnvironmentConfig } from '../config/environments';
 
-type CustomFixtures = {
-  webPage: BasePage;
-  mobilePage: BasePage;
-  desktopPage: BasePage;
-  basePage: BasePage;
-  environment: ReturnType<typeof getEnvironment>;
+/**
+ * 扩展 fixtures 类型：Midscene AI + 环境配置
+ */
+type CustomFixtures = PlayWrightAiFixtureType & {
+  /** 当前环境配置（dev/staging/prod） */
+  environment: EnvironmentConfig;
 };
 
 export const test = base.extend<CustomFixtures>({
-  environment: async ({}, use) => {
+  // 注入 Midscene AI fixtures
+  // 提供: ai, aiQuery, aiAssert, aiTap, aiInput, aiScroll, aiWaitFor, aiRightClick,
+  //       agentForPage, recordToReport
+  ...PlaywrightAiFixture({
+    waitForNetworkIdleTimeout: 2000,
+  }),
+
+  // 环境配置 fixture
+  environment: async ({ }, use) => {
     const env = getEnvironment();
     await use(env);
-  },
-
-  basePage: async ({ page }, use) => {
-    const basePage = new BasePage(page);
-    await use(basePage);
-  },
-
-  webPage: async ({ page, environment }, use) => {
-    const basePage = new BasePage(page);
-    // 设置 Web 环境的基础 URL
-    if (environment.webUrl) {
-      await page.goto(environment.webUrl);
-    }
-    await use(basePage);
-  },
-
-  mobilePage: async ({ page, environment }, use) => {
-    const basePage = new BasePage(page);
-    // 设置移动端环境的基础 URL
-    if (environment.mobileUrl) {
-      await page.goto(environment.mobileUrl);
-    }
-    await use(basePage);
-  },
-
-  desktopPage: async ({ page }, use) => {
-    const basePage = new BasePage(page);
-    // 桌面应用可能需要特殊处理
-    await use(basePage);
   },
 });
 

@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
@@ -12,24 +15,24 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
-    "types": ["node", "@playwright/test"],
+    "types": [
+      "node",
+      "@playwright/test"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@config/*": ["src/config/*"],
-      "@utils/*": ["src/utils/*"],
-      "@pages/*": ["src/pages/*"],
-      "@recorder/*": ["src/recorder/*"],
-      "@executor/*": ["src/executor/*"],
-      "@converter/*": ["src/converter/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "@config/*": [
+        "src/config/*"
+      ]
     }
   },
   "include": [
     "src/**/*",
-    "tests/**/*",
-    "scripts/**/*"
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",

@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { config } from 'dotenv';
 import path from 'path';
 
-// 加载环境变量
+// 加载环境变量（包含 Midscene AI 模型配置）
 config({ path: path.resolve(__dirname, '.env') });
 
 const ENV = process.env.ENV || 'dev';
@@ -13,46 +13,47 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
+
   reporter: [
     ['html', { outputFolder: 'reports/html-report', open: 'never' }],
-    // 暂时禁用 Allure 报告生成（避免生成大量日志文件）
-    // 如需启用，取消下面的注释
-    // ['allure-playwright', { outputFolder: 'reports/allure-results' }],
-    ['list']
+    ['list'],
+    // Midscene AI 可视化报告
+    ['@midscene/web/playwright-reporter', { type: 'merged' }],
   ],
+
   use: {
     baseURL: process.env[`WEB_${ENV.toUpperCase()}_URL`] || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    actionTimeout: 60000, // 增加到60秒
-    navigationTimeout: 60000, // 增加到60秒
+    actionTimeout: 60000,
+    navigationTimeout: 60000,
   },
-  
-  // 增加全局测试超时时间（5分钟）
+
+  // AI 推理需要较长时间，设置 5 分钟超时
   timeout: 300000,
 
   projects: [
-    // Web 项目 - Chromium
+    // Web - Chromium
     {
       name: 'chromium-web',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
       },
     },
-    // Web 项目 - Firefox
+    // Web - Firefox
     {
       name: 'firefox-web',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         viewport: { width: 1920, height: 1080 },
       },
     },
-    // Web 项目 - WebKit
+    // Web - WebKit
     {
       name: 'webkit-web',
-      use: { 
+      use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1920, height: 1080 },
       },
@@ -60,26 +61,16 @@ export default defineConfig({
     // 移动端 - iPhone
     {
       name: 'mobile-iphone',
-      use: { 
+      use: {
         ...devices['iPhone 13 Pro'],
       },
     },
     // 移动端 - Android
     {
       name: 'mobile-android',
-      use: { 
+      use: {
         ...devices['Pixel 5'],
       },
     },
-    // 桌面应用（需要单独配置）
-    {
-      name: 'desktop-app',
-      use: {
-        baseURL: undefined,
-      },
-    },
   ],
-
-  // 桌面应用配置
-  webServer: undefined, // 可以根据需要配置本地服务器
 });
