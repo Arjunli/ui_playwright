@@ -118,6 +118,18 @@ test.describe('四十致远 OA 菜单导航测试', () => {
       return slowKeywords.some(kw => errMsg.includes(kw));
     };
 
+    // 清理错误信息：AI 断言失败时错误信息形如
+    //   "Assertion failed: 页面主内容区已正常加载，没有出现报错或空白页\nReason: 根据截图..."
+    // 断言描述每次都一样且无信息量，只保留 Reason 部分（真正的失败原因）
+    const cleanError = (raw: string): string => {
+      const reasonMatch = raw.match(/Reason:\s*([\s\S]+)/);
+      return (reasonMatch ? reasonMatch[1] : raw).trim();
+    };
+
+    // 统一提取异常信息并清理
+    const extractError = (e: unknown): string =>
+      cleanError(e instanceof Error ? e.message : String(e));
+
     // 移走鼠标清除残留子菜单面板
     const hoverAway = async () => {
       await loggedInPage.mouse.move(960, 540);
@@ -141,7 +153,7 @@ test.describe('四十致远 OA 菜单导航测试', () => {
         result.status = 'success';
         console.log(`✅ [${resultPath}] 加载成功`);
       } catch (e) {
-        result.error = e instanceof Error ? e.message : String(e);
+        result.error = extractError(e);
         // 区分"缓慢加载"与"真实失败"
         if (isSlowError(result.error)) {
           result.status = 'slow';
@@ -162,7 +174,7 @@ test.describe('四十致远 OA 菜单导航测试', () => {
           await menuItem.click();
           loadResults.push(await verifyLoad(mainMenu, 2));
         } catch (e) {
-          const err = e instanceof Error ? e.message : String(e);
+          const err = extractError(e);
           const status: LoadStatus = isSlowError(err) ? 'slow' : 'fail';
           loadResults.push({ path: mainMenu, level: 2, status, error: err });
           console.log(`${status === 'slow' ? '🟡' : '❌'} [${mainMenu}] ${status === 'slow' ? '缓慢加载' : '加载失败'}`);
@@ -180,7 +192,7 @@ test.describe('四十致远 OA 菜单导航测试', () => {
             await aiTap(`「${mainMenu}」子菜单面板中的「${subMenu}」选项`);
             loadResults.push(await verifyLoad(`${mainMenu} > ${subMenu}`, 2));
           } catch (e) {
-            const err = e instanceof Error ? e.message : String(e);
+            const err = extractError(e);
             const status: LoadStatus = isSlowError(err) ? 'slow' : 'fail';
             loadResults.push({ path: `${mainMenu} > ${subMenu}`, level: 2, status, error: err });
             console.log(`${status === 'slow' ? '🟡' : '❌'} [${mainMenu} > ${subMenu}] ${status === 'slow' ? '缓慢加载' : '加载失败'}`);
@@ -197,7 +209,7 @@ test.describe('四十致远 OA 菜单导航测试', () => {
               await aiTap(`「${subMenu}」右侧三级子菜单面板中的「${thirdMenu}」选项`);
               loadResults.push(await verifyLoad(`${mainMenu} > ${subMenu} > ${thirdMenu}`, 3));
             } catch (e) {
-              const err = e instanceof Error ? e.message : String(e);
+              const err = extractError(e);
               const status: LoadStatus = isSlowError(err) ? 'slow' : 'fail';
               loadResults.push({ path: `${mainMenu} > ${subMenu} > ${thirdMenu}`, level: 3, status, error: err });
               console.log(`${status === 'slow' ? '🟡' : '❌'} [${mainMenu} > ${subMenu} > ${thirdMenu}] ${status === 'slow' ? '缓慢加载' : '加载失败'}`);
