@@ -12,6 +12,13 @@ reports/
 test-results/
 playwright-report/
 playwright/.cache/
+midscene_run/
+
+# 测试运行产物（本地生成，勿提交）
+menu-structure.json
+menu-structure-3level.json
+menu-all-load-result.json
+menu-load-result.json
 
 # Environment variables
 .env

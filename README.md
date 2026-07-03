@@ -34,10 +34,12 @@ MIDSCENE_MODEL_FAMILY=qwen2.5-vl
 ```
 
 支持的模型服务商：
+- **火山引擎** - Doubao-Seed / Doubao-Vision / UI-TARS（当前使用 `doubao-seed-2.0-code`，端点 `/api/plan/v3`）
 - **阿里云 DashScope** - Qwen2.5-VL / Qwen3-VL / Qwen3.5
 - **Google Gemini** - Gemini-3-Pro / Gemini-3-Flash
-- **火山引擎** - Doubao-Seed / UI-TARS
 - **智谱 AI** - GLM-4.6V
+
+> ⚠️ Midscene 需要**视觉模型（VLM）**才能识别截图中的 UI 元素。配置时 `MIDSCENE_MODEL_FAMILY` 必须取以下合法值之一：`doubao-seed`、`doubao-vision`、`gemini`、`qwen2.5-vl`、`qwen3-vl`、`qwen3.5`、`vlm-ui-tars`、`vlm-ui-tars-doubao`、`vlm-ui-tars-doubao-1.5`、`glm-v`、`auto-glm`、`auto-glm-multilingual`、`gpt-5`。
 
 详见 [Midscene 模型配置文档](https://midscenejs.com/model-common-config.html)
 

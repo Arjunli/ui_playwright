@@ -7,6 +7,8 @@
     "test": "playwright test",
     "test:web": "playwright test tests/web --project=chromium-web",
     "test:mobile": "playwright test tests/mobile --project=mobile-iphone",
+    "test:menu-load": "playwright test tests/web/menu-navigation.spec.ts --project=chromium-web -g \"逐个点击所有菜单项\"",
+    "schedule:menu-load": "node scripts/schedule-runner.js",
     "report": "npx playwright show-report reports/html-report"
   },
   "keywords": [

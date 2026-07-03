@@ -23,9 +23,11 @@ export default defineConfig({
 
   use: {
     baseURL: process.env[`WEB_${ENV.toUpperCase()}_URL`] || 'http://localhost:3000',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // 全程开启录制：trace（操作轨迹）、screenshot（截图）、video（录像）
+    // 便于回放每次 AI 调用与页面交互过程
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on',
     actionTimeout: 60000,
     navigationTimeout: 60000,
   },
