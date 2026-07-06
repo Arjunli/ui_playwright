@@ -91,6 +91,13 @@ export interface TestResultSummary {
   slowItems: { path: string; reason: string }[];
   /** 可选：报告链接 */
   reportUrl?: string;
+  /**
+   * 失败率通知阈值（百分比 0-100）。失败率 < 此值时跳过通知，避免少量失败刷屏。
+   * 未传入时默认读取环境变量 FEISHU_NOTIFY_FAIL_THRESHOLD，再缺省为 0（始终发送）。
+   */
+  failThreshold?: number;
+  /** 判定"缓慢"的秒数阈值（页面加载超过该秒数即算缓慢），用于在卡片中说明判定标准 */
+  slowThresholdSeconds?: number;
 }
 
 /**
@@ -133,6 +140,20 @@ function md(text: string): TextNode {
  *   └─────────────────────────────────────┘
  */
 export async function sendTestResultToFeishu(summary: TestResultSummary): Promise<boolean> {
+  // —— 失败率阈值：失败率 < 阈值时跳过通知，避免少量失败刷屏 ——
+  // 优先使用 summary.failThreshold，否则读取环境变量 FEISHU_NOTIFY_FAIL_THRESHOLD，再缺省 0（始终发送）
+  const failThreshold =
+    typeof summary.failThreshold === 'number'
+      ? summary.failThreshold
+      : (Number(process.env.FEISHU_NOTIFY_FAIL_THRESHOLD) || 0);
+  const failRate = summary.total > 0 ? (summary.fail / summary.total) * 100 : 0;
+  if (failThreshold > 0 && failRate < failThreshold) {
+    console.log(
+      `[飞书通知] 失败率 ${failRate.toFixed(1)}% 低于阈值 ${failThreshold}%，跳过通知（${summary.fail}/${summary.total} 失败）`
+    );
+    return false;
+  }
+
   const passRate = summary.total > 0
     ? ((summary.success / summary.total) * 100).toFixed(1)
     : '0';
@@ -232,7 +253,7 @@ export async function sendTestResultToFeishu(summary: TestResultSummary): Promis
     for (const f of summary.failures) {
       elements.push({
         tag: 'div',
-        text: md(`❌ **${f.path}**\n　　原因：${f.reason}`),
+        text: md(`❌ **${f.path}**\n　　页面异常详情：${f.reason}`),
       });
     }
   }
@@ -243,13 +264,18 @@ export async function sendTestResultToFeishu(summary: TestResultSummary): Promis
 
     elements.push({
       tag: 'div',
-      text: md(`**🟡 缓慢加载（${summary.slowItems.length} 项，非失败）**`),
+      text: md(
+        `**🟡 缓慢加载（${summary.slowItems.length} 项，非失败）**` +
+        (summary.slowThresholdSeconds != null
+          ? `\n判定标准：页面加载超过 ${summary.slowThresholdSeconds} 秒未完成`
+          : '')
+      ),
     });
 
     for (const s of summary.slowItems) {
       elements.push({
         tag: 'div',
-        text: md(`⏳ **${s.path}**\n　　原因：${s.reason}`),
+        text: md(`⏳ **${s.path}**`),
       });
     }
   }

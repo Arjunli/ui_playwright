@@ -19,6 +19,10 @@ test.describe('飞书机器人通知', () => {
       slow: 2,
       total: 9,
       durationMs: 60000,
+      // 验证场景下强制发送，不受失败率阈值限制
+      failThreshold: 0,
+      // 模拟判定标准：超过 20 秒未加载完成即算缓慢
+      slowThresholdSeconds: 20,
       failures: [
         { path: '设施 > 监控中心 > Java 监控', reason: '返回 401 账号未登录' },
         { path: '设施 > 代码生成案例 > 树表（增删改查）', reason: '服务器更新,请刷新重试!' },

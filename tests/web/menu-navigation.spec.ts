@@ -1,7 +1,14 @@
 import { test, expect } from '../../src/fixtures/custom-fixtures';
-import { sendTestResultToFeishu } from '../../src/utils/feishu-notify';
+import { sendTestResultToFeishu, sendText } from '../../src/utils/feishu-notify';
 import fs from 'fs';
 import path from 'path';
+
+/**
+ * 标记：合并加载测试体是否已正常走到末尾并发送过飞书通知。
+ * 测试体正常完成时置为 true；若登录失败/中途崩溃则保持 false，
+ * afterEach 据此判断是否需要补发紧急告警。
+ */
+let loadTestNotified = false;
 
 /**
  * 四十致远 OA 菜单导航测试（合并版：两层 + 三层）
@@ -29,6 +36,9 @@ const MAIN_MENUS = [
   '开发', '运营', '选品', 'RPA', '产品', '设计',
   '工具', '采购', '利润', '财务', '系统', '设施',
 ];
+
+// 跳过点击验证的主菜单（这些菜单不参与每次加载检测）
+const SKIP_MENUS = ['系统', '设施', '工具'];
 
 const MENU_STRUCTURE_FILE = path.resolve(__dirname, '../../menu-structure.json');
 const MENU_STRUCTURE_3LEVEL_FILE = path.resolve(__dirname, '../../menu-structure-3level.json');
@@ -84,6 +94,9 @@ test.describe('四十致远 OA 菜单导航测试', () => {
   }) => {
     // 两层 56 项 + 三层 37 项，共 93 项，放宽到 50 分钟
     test.setTimeout(50 * 60 * 1000);
+
+    // 重置通知标记：本轮测试若中途崩溃（如登录失败），afterEach 据此补发告警
+    loadTestNotified = false;
 
     const startTime = Date.now();
 
@@ -145,10 +158,13 @@ test.describe('四十致远 OA 菜单导航测试', () => {
     };
 
     // 点击叶子菜单后等待加载并断言（原生等待 + 单次 AI 断言）
+    // 判定"缓慢"的阈值：页面加载超过该秒数未完成即算缓慢
+    const SLOW_THRESHOLD_SEC = 20;
+
     const verifyLoad = async (resultPath: string, level: 2 | 3): Promise<LoadResult> => {
       const result: LoadResult = { path: resultPath, level, status: 'fail' };
       try {
-        await loggedInPage.waitForLoadState('networkidle', { timeout: 20000 });
+        await loggedInPage.waitForLoadState('networkidle', { timeout: SLOW_THRESHOLD_SEC * 1000 });
         await aiAssert('页面主内容区已正常加载，没有出现报错或空白页');
         result.status = 'success';
         console.log(`✅ [${resultPath}] 加载成功`);
@@ -167,6 +183,11 @@ test.describe('四十致远 OA 菜单导航测试', () => {
     };
 
     for (const [mainMenu, subMenus] of Object.entries(twoLevel)) {
+      // 跳过无需每次检测的主菜单（如系统/设施/工具）
+      if (SKIP_MENUS.includes(mainMenu)) {
+        console.log(`⏭️ [${mainMenu}] 已跳过（在 SKIP_MENUS 中）`);
+        continue;
+      }
       // 无子菜单的主菜单：直接点击主菜单本身
       if (subMenus.length === 0) {
         try {
@@ -258,6 +279,7 @@ test.describe('四十致远 OA 菜单导航测试', () => {
       slow: slowCount,
       total,
       durationMs,
+      slowThresholdSeconds: SLOW_THRESHOLD_SEC,
       failures: loadResults
         .filter(r => r.status === 'fail')
         .map(r => ({ path: r.path, reason: r.error || '未知错误' })),
@@ -265,9 +287,48 @@ test.describe('四十致远 OA 菜单导航测试', () => {
         .filter(r => r.status === 'slow')
         .map(r => ({ path: r.path, reason: r.error || '加载较慢' })),
     });
+    // 测试体正常走到这里，标记已自行发送通知，afterEach 无需补发
+    loadTestNotified = true;
 
     // 断言：成功+缓慢 应占大部分（缓慢不算失败）
     expect(successCount + slowCount, '至少应有一半以上菜单可正常加载或缓慢加载').toBeGreaterThan(total / 2);
+  });
+
+  // ==========================================================================
+  // 兜底通知：若「两层+三层合并」测试因登录失败/中途崩溃而未能自行发送通知，
+  // afterEach 检测到测试失败且未通知时，补发一条紧急告警（绕过失败率阈值）。
+  // 这覆盖了"登录都登不上去"等最严重却无告警的盲区。
+  // ==========================================================================
+  test.afterEach(async ({}, testInfo) => {
+    // 仅关注合并加载测试
+    if (!testInfo.title.includes('两层+三层合并')) return;
+    // 测试通过 或 已自行通知 → 无需补发
+    if (testInfo.status === 'passed' || testInfo.status === 'skipped') return;
+    if (loadTestNotified) return;
+
+    // 提取失败原因（首个 error）
+    const firstError = testInfo.errors?.[0];
+    const reason = firstError?.message
+      ? String(firstError.message).split('\n')[0].slice(0, 200)
+      : '未知错误（测试未正常完成）';
+
+    // 判断是否为登录阶段失败
+    const isLoginFailure = /登录|login|aiWaitFor|页面已经登录成功/i.test(reason);
+
+    const alertTitle = isLoginFailure
+      ? '🚨 四十致远 OA 登录失败告警'
+      : '🚨 四十致远 OA 菜单测试异常告警';
+
+    const alertBody =
+      `${alertTitle}\n` +
+      `测试名称：${testInfo.title}\n` +
+      `状态：${testInfo.status}\n` +
+      `失败原因：${reason}\n` +
+      `时间：${new Date().toLocaleString('zh-CN', { hour12: false })}\n` +
+      `该测试未能正常完成（测试体未执行到底），请尽快排查。`;
+
+    console.log(`\n⚠️ [兜底告警] 测试失败但未自行通知，补发紧急告警...\n${alertBody}`);
+    await sendText(alertBody);
   });
 
 });
